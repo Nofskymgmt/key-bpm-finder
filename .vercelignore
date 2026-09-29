@@ -1,0 +1,6 @@
+# Never upload local secrets; keys live in Vercel's environment variables instead.
+.env*
+node_modules
+.next
+design-versions
+test-audio

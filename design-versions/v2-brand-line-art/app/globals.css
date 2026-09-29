@@ -1,0 +1,370 @@
+/* Palette from the Nofsky Art Direction Guide 2026 */
+:root {
+  --off-white: #f6f3ed; /* main background */
+  --olive: #8c8a68; /* pop color, sparingly */
+  --mauve: #a08a7e; /* warm gradients */
+  --taupe: #6b5e54; /* warm mid-tones */
+  --charcoal: #3a3533; /* dim, calm */
+  --oxblood: #4c2a26; /* labels, accent text */
+  --near-black: #141212; /* text, never pure black */
+  --teal: #377276; /* muted take on the teal logo, for the home page button */
+  --teal-hover: #2e6266;
+  --olive-hover: #9a9876;
+
+  --panel: rgba(255, 253, 249, 0.72);
+  --line: #e2dbd0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--off-white);
+  color: var(--near-black);
+  font-family: var(--font-body), system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+/* ---------- Background art ---------- */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* a faint warm glow, like morning light from the top right */
+  background: radial-gradient(ellipse 60% 45% at 85% 5%, rgba(160, 138, 126, 0.14), transparent 70%);
+}
+
+.art {
+  position: absolute;
+  stroke-width: 1.4px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.palm {
+  height: min(78vh, 700px);
+  width: auto;
+  bottom: -6px;
+}
+
+.palm-left {
+  left: max(-60px, calc(50vw - 640px));
+  stroke: var(--olive);
+  opacity: 0.55;
+}
+
+.palm-right {
+  right: max(-40px, calc(50vw - 620px));
+  height: min(56vh, 480px);
+  stroke: var(--mauve);
+  opacity: 0.6;
+  transform: scaleX(-1);
+}
+
+.sun {
+  top: 9vh;
+  right: max(24px, calc(50vw - 520px));
+  width: 110px;
+  stroke: var(--olive);
+  opacity: 0.55;
+}
+
+.sparkle {
+  stroke: var(--olive);
+  opacity: 0.6;
+}
+
+.sparkle-1 {
+  width: 22px;
+  top: 24vh;
+  left: max(24px, calc(50vw - 470px));
+}
+
+.sparkle-2 {
+  width: 14px;
+  top: 32vh;
+  left: max(56px, calc(50vw - 430px));
+}
+
+.horizon {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 40px;
+  stroke: var(--taupe);
+  opacity: 0.3;
+}
+
+/* ---------- Layout ---------- */
+
+.site-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 36px 20px 0;
+}
+
+.logo {
+  display: block;
+  width: 150px;
+  aspect-ratio: 1090 / 245;
+  background: var(--near-black);
+  -webkit-mask: url('/nofsky-logo.png') center / contain no-repeat;
+  mask: url('/nofsky-logo.png') center / contain no-repeat;
+  transition: background 0.2s;
+}
+
+.logo:hover {
+  background: var(--olive);
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 56px 20px 96px;
+}
+
+h1 {
+  font-family: var(--font-headline), sans-serif;
+  font-weight: 600;
+  font-size: 2.75rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  margin: 0 0 16px;
+}
+
+.hero {
+  text-align: center;
+  padding-top: 8vh;
+}
+
+.lead {
+  color: var(--taupe);
+  font-size: 1.1rem;
+  margin: 0 auto 36px;
+  max-width: 480px;
+}
+
+.hand-note {
+  font-family: var(--font-hand), cursive;
+  color: var(--olive);
+  font-size: 1.15rem;
+  margin: 28px 0 0;
+  transform: rotate(-2deg);
+}
+
+/* ---------- Controls ---------- */
+
+.button {
+  display: inline-block;
+  background: var(--near-black);
+  color: var(--off-white);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-family: var(--font-headline), sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--charcoal);
+  transform: translateY(-1px);
+}
+
+.button-teal {
+  background: var(--teal);
+}
+
+.button-teal:hover:not(:disabled) {
+  background: var(--teal-hover);
+}
+
+/* near-black text on olive: off-white text would be too low-contrast */
+.button-olive {
+  background: var(--olive);
+  color: var(--near-black);
+}
+
+.button-olive:hover:not(:disabled) {
+  background: var(--olive-hover);
+}
+
+.button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.back {
+  color: var(--taupe);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.back:hover {
+  color: var(--near-black);
+}
+
+.dropzone {
+  border: 1.5px dashed var(--mauve);
+  border-radius: 18px;
+  background: var(--panel);
+  backdrop-filter: blur(2px);
+  padding: 48px 20px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.dropzone:hover,
+.dropzone.dragging {
+  border-color: var(--olive);
+  background: rgba(140, 138, 104, 0.08);
+}
+
+.dropzone p {
+  margin: 0;
+}
+
+.file-name {
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.hint {
+  color: var(--taupe);
+  font-size: 0.85rem;
+  margin-top: 8px !important;
+}
+
+/* ---------- States ---------- */
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--taupe);
+  margin-top: 28px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--line);
+  border-top-color: var(--olive);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  color: var(--oxblood);
+  background: rgba(160, 138, 126, 0.16);
+  border-left: 3px solid var(--oxblood);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 24px;
+}
+
+/* ---------- Results ---------- */
+
+.results {
+  margin-top: 36px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  backdrop-filter: blur(2px);
+}
+
+.result-file {
+  color: var(--taupe);
+  margin: 0 0 20px;
+  word-break: break-all;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.label {
+  display: block;
+  color: var(--oxblood);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.value {
+  display: inline-block;
+  font-family: var(--font-headline), sans-serif;
+  font-size: 2.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.15;
+}
+
+/* olive marker underline, per the guide's illustration style */
+.marked {
+  padding-bottom: 10px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' preserveAspectRatio='none'%3E%3Cpath d='M3 8 Q50 3 100 6 T197 5' fill='none' stroke='%238c8a68' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E")
+    bottom / 100% 10px no-repeat;
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2.1rem;
+  }
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+  .value {
+    font-size: 2.2rem;
+  }
+  .palm-left {
+    left: -90px;
+    height: 58vh;
+    opacity: 0.35;
+  }
+  .palm-right {
+    right: -80px;
+    height: 40vh;
+    opacity: 0.4;
+  }
+  .sun {
+    width: 72px;
+    top: 14px;
+    right: 14px;
+  }
+  .sparkle {
+    display: none;
+  }
+}
