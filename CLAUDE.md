@@ -27,7 +27,11 @@ That is the whole product. **Do not add features beyond it.** That means no play
   - Never import them into a `'use client'` file.
   - They go in `.env.local` (never committed) and in Vercel's environment variables.
 - **Stripe** for payments. The server routes are `app/api/checkout`, `app/api/portal` and `app/api/stripe/webhook`. Don't add other backend code unless the user asks.
-- Deployed to **Vercel**, so don't do anything that would block a Vercel deploy.
+- Deployed to **Vercel** (project `key-bpm-finder`, https://key-bpm-finder.vercel.app), so don't do anything that would block a Vercel deploy. Deploy with `npx vercel deploy --prod`.
+- **The source code is public** at https://github.com/Nofskymgmt/key-bpm-finder under **AGPL-3.0**, because the app includes Essentia.js (AGPL-3.0).
+  - Keep the footer's "Source code" link (`app/lib/site.js`).
+  - Keep `LICENSE`.
+  - Before every push, check that no secrets are committed: `.env*` and `.vercel` must stay ignored.
 - Add as few dependencies as possible. Explain any new package before installing it.
 
 ## How to work: small steps, in this order
