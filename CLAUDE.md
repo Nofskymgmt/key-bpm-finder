@@ -28,6 +28,10 @@ That is the whole product. **Do not add features beyond it.** That means no play
   - Never give them the `NEXT_PUBLIC_` prefix.
   - Never import them into a `'use client'` file.
   - They live **only in Vercel's environment variables**, not in `.env.local`: this folder is synced to OneDrive. Never print them in chat or logs.
+- **Bot protection:** Cloudflare Turnstile is on for sign up and log in.
+  - The public site key is `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, set in Vercel and `.env.local`.
+  - The secret is only in Supabase → Authentication → Attack Protection.
+  - Supabase rejects auth requests without a token. Local log in only works if `localhost` is in the widget's hostnames.
 - Database rules: `supabase/schema.sql`, then `billing.sql`, then `security-fixes.sql`. The trigger `enforce_analysis_rules` enforces the free limit and sets `created_at`. Browser roles may only read and insert their own `analyses` and read their own `profiles`. Keep it that way.
 - **Stripe** for payments. The server routes are `app/api/checkout`, `app/api/portal` and `app/api/stripe/webhook`. Don't add other backend code unless the user asks.
 - Deployed to **Vercel** (project `key-bpm-finder`, https://key-bpm-finder.vercel.app), so don't do anything that would block a Vercel deploy. Deploy with `npx vercel deploy --prod`.
