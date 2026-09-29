@@ -13,7 +13,9 @@ The home page is a landing page with a hero, a "How it works" section and pricin
 - An account is required to analyze.
 - **Free:** 5 analyses per calendar month (UTC), counted from the user's saved History rows, so the count resets on the 1st. The database enforces the limit (`supabase/billing.sql`). After 5, the Analyze page shows a paywall.
 - **Pro:** $9/month Stripe subscription, unlimited analyses. Uses Stripe Checkout. A Stripe **webhook** is the only thing that marks a user Pro, never the checkout redirect. "Manage subscription" in the Account menu opens the Stripe customer portal.
-- Test mode first. Stripe setup lives in `scripts/stripe-setup.mjs`.
+- **Stripe is LIVE on Vercel production** (real payments, set up 2026-09-29). Local development (`.env.local`'s `STRIPE_SECRET_KEY` and related values) stays in **test mode**. The live values are kept in `.env.local` as `STRIPE_LIVE_*` and are set in Vercel under the normal names.
+  - Never point local development at live keys.
+  - Stripe setup lives in `scripts/stripe-setup.mjs`. Use `--live` for the live account.
 
 That is the whole product. **Do not add features beyond it.** That means no playlists, library, sharing, social logins, extra plans, or extra analysis (no energy, danceability, waveform, loudness, and so on). If a feature seems useful, suggest it and wait for approval. Do not build it.
 
