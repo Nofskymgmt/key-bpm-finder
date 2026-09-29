@@ -32,16 +32,30 @@ export function json(body, status = 200) {
   return Response.json(body, { status });
 }
 
-const PRO_STATUSES = ['active', 'trialing'];
+// For unexpected failures: log the details (visible in Vercel's logs), show the user something generic.
+export function serverError(label, err) {
+  console.error(label, err);
+  return json({ error: 'Something went wrong on our side. Please try again in a moment.' }, 500);
+}
 
-// Copy a Stripe subscription's current state onto the user's profile. Always re-fetches the
-// subscription from Stripe, so webhook events arriving out of order can't leave stale data.
+export const PRO_STATUSES = ['active', 'trialing'];
+
+// The customer's subscription that currently grants Pro, if any.
+export async function activeSubscription(customerId) {
+  const subs = await stripe().subscriptions.list({ customer: customerId, status: 'all', limit: 20 });
+  return subs.data.find((s) => PRO_STATUSES.includes(s.status)) || null;
+}
+
+// Copy the customer's current subscription state onto the user's profile. Always re-fetches from
+// Stripe, so webhook events arriving out of order can't leave stale data. Looks at ALL of the
+// customer's subscriptions, so cancelling a duplicate can't downgrade someone still paying.
 export async function syncSubscription(subscriptionId, fallbackUserId) {
-  const sub = await stripe().subscriptions.retrieve(subscriptionId);
-  const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
+  const changed = await stripe().subscriptions.retrieve(subscriptionId);
+  const customerId = typeof changed.customer === 'string' ? changed.customer : changed.customer.id;
+  const sub = (await activeSubscription(customerId)) || changed;
   const db = supabaseAdmin();
 
-  let userId = sub.metadata?.supabase_user_id || fallbackUserId;
+  let userId = sub.metadata?.supabase_user_id || changed.metadata?.supabase_user_id || fallbackUserId;
   if (!userId) {
     const { data } = await db.from('profiles').select('id').eq('stripe_customer_id', customerId).maybeSingle();
     userId = data?.id;

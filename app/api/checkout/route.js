@@ -1,4 +1,4 @@
-import { stripe, supabaseAdmin, userFromRequest, json } from '../../lib/server';
+import { stripe, supabaseAdmin, userFromRequest, json, serverError, activeSubscription } from '../../lib/server';
 
 // Starts a Stripe Checkout for the Pro subscription and returns its URL.
 export async function POST(request) {
@@ -29,6 +29,10 @@ export async function POST(request) {
       customerId = customer.id;
       const { error } = await db.from('profiles').upsert({ id: user.id, stripe_customer_id: customerId });
       if (error) throw new Error(`Couldn't save Stripe customer: ${error.message}`);
+    } else if (await activeSubscription(customerId)) {
+      // Stripe already has an active subscription (the webhook may not have updated us yet):
+      // don't let a second checkout charge them twice.
+      return json({ error: 'You already have an active Pro subscription. Refresh the page in a moment.' }, 400);
     }
 
     const origin = new URL(request.url).origin;
@@ -43,7 +47,6 @@ export async function POST(request) {
     });
     return json({ url: session.url });
   } catch (err) {
-    console.error('Checkout error:', err);
-    return json({ error: err.message }, 500);
+    return serverError('Checkout error:', err);
   }
 }

@@ -9,13 +9,41 @@ import Paywall from '../components/Paywall';
 
 // Postgres "row-level security" rejection: the database refused a free user's save over the limit.
 const RLS_VIOLATION = '42501';
+// Postgres "check constraint" rejection: a value the database considers invalid (see security-fixes.sql).
+const CHECK_VIOLATION = '23514';
 
 const SAMPLE_RATE = 44100; // Essentia's rhythm and key algorithms expect 44.1 kHz
 const ALLOWED_EXTENSIONS = ['.mp3', '.wav'];
+// Decoding needs roughly 10x the song's length in memory; these keep a browser tab from running out.
+const MAX_FILE_MB = 150;
+const MAX_MINUTES = 20;
 
 function isAllowedFile(file) {
   const name = file.name.toLowerCase();
   return ALLOWED_EXTENSIONS.some((ext) => name.endsWith(ext));
+}
+
+// Read just the duration (cheap) before decoding the whole file (expensive). null if unknown.
+function getDurationSeconds(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const audio = new Audio();
+    const done = (value) => {
+      URL.revokeObjectURL(url);
+      resolve(value);
+    };
+    const timer = setTimeout(() => done(null), 10000);
+    audio.preload = 'metadata';
+    audio.onloadedmetadata = () => {
+      clearTimeout(timer);
+      done(Number.isFinite(audio.duration) ? audio.duration : null);
+    };
+    audio.onerror = () => {
+      clearTimeout(timer);
+      done(null);
+    };
+    audio.src = url;
+  });
 }
 
 // Decode the file and mix it down to a single mono channel at 44.1 kHz.
@@ -100,6 +128,14 @@ export default function AnalyzePage() {
       setError(`"${selected.name}" isn't an MP3 or WAV file. Please choose a .mp3 or .wav file.`);
       return;
     }
+    if (selected.size > MAX_FILE_MB * 1024 * 1024) {
+      setFile(null);
+      setStatus('error');
+      setError(
+        `"${selected.name}" is ${Math.round(selected.size / 1024 / 1024)} MB. Files up to ${MAX_FILE_MB} MB are supported.`
+      );
+      return;
+    }
     setFile(selected);
     setStatus('idle');
     setError('');
@@ -114,6 +150,16 @@ export default function AnalyzePage() {
     setResult(null);
     setError('');
     setSaveState('idle');
+
+    // Long files can be small (e.g. low-bitrate MP3s) but still take huge memory to decode.
+    const seconds = await getDurationSeconds(file);
+    if (seconds && seconds > MAX_MINUTES * 60) {
+      setStatus('error');
+      setError(
+        `"${file.name}" is ${Math.round(seconds / 60)} minutes long. Songs up to ${MAX_MINUTES} minutes are supported.`
+      );
+      return;
+    }
 
     let samples;
     try {
@@ -152,11 +198,16 @@ export default function AnalyzePage() {
     setSaveError('');
     const { error } = await supabase
       .from('analyses')
-      .insert({ file_name: r.fileName, bpm: r.bpm, key: r.key, scale: r.scale });
+      // the database accepts file names up to 255 characters
+      .insert({ file_name: r.fileName.slice(0, 255), bpm: r.bpm, key: r.key, scale: r.scale });
     if (error) {
       console.error('Save error:', error);
       setSaveState(error.code === RLS_VIOLATION ? 'limit' : 'error');
-      setSaveError(error.message);
+      setSaveError(
+        error.code === CHECK_VIOLATION
+          ? 'this result has an unexpected key or tempo, so it wasn’t saved.'
+          : error.message
+      );
     } else {
       setSaveState('saved');
     }

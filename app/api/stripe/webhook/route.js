@@ -1,4 +1,4 @@
-import { stripe, syncSubscription, json } from '../../../lib/server';
+import { stripe, syncSubscription, json, serverError } from '../../../lib/server';
 
 // Stripe calls this after checkout and whenever a subscription changes or is canceled.
 // This (not the checkout redirect) is what marks a user Pro, so it works even if they close the tab.
@@ -13,7 +13,7 @@ export async function POST(request) {
     );
   } catch (err) {
     console.error('Webhook signature check failed:', err.message);
-    return json({ error: `Webhook signature check failed: ${err.message}` }, 400);
+    return json({ error: 'Invalid signature.' }, 400);
   }
 
   try {
@@ -35,7 +35,6 @@ export async function POST(request) {
     return json({ received: true });
   } catch (err) {
     // A 500 makes Stripe retry the event later.
-    console.error(`Webhook ${event.type} failed:`, err);
-    return json({ error: err.message }, 500);
+    return serverError(`Webhook ${event.type} failed:`, err);
   }
 }

@@ -601,6 +601,12 @@ h1 {
   margin: -6px 0 0 !important;
 }
 
+.captcha {
+  min-height: 65px;
+  display: flex;
+  justify-content: center;
+}
+
 .form .button-block {
   margin-top: 6px;
 }

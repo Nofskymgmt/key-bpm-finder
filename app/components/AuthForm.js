@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, useUser, NOT_CONFIGURED } from '../lib/supabase';
+import Captcha, { CAPTCHA_SITE_KEY } from './Captcha';
+
+// New accounts need at least this many characters (must match Supabase's "Minimum password length").
+// Log in doesn't check it, so accounts created under the old 6-character rule still work.
+const MIN_PASSWORD = 8;
 
 // The shared log in / sign up form. initialMode picks which one it opens on.
 export default function AuthForm({ initialMode = 'login' }) {
@@ -15,6 +20,9 @@ export default function AuthForm({ initialMode = 'login' }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaRound, setCaptchaRound] = useState(0);
+  const onCaptchaToken = useCallback((t) => setCaptchaToken(t), []);
 
   const isSignup = mode === 'signup';
 
@@ -26,13 +34,18 @@ export default function AuthForm({ initialMode = 'login' }) {
       setError(NOT_CONFIGURED);
       return;
     }
+    if (CAPTCHA_SITE_KEY && !captchaToken) {
+      setError('Please complete the “I’m not a robot” check first.');
+      return;
+    }
+    const captcha = CAPTCHA_SITE_KEY ? { captchaToken } : {};
     setBusy(true);
     try {
       if (isSignup) {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/analyze` },
+          options: { emailRedirectTo: `${window.location.origin}/analyze`, ...captcha },
         });
         if (error) throw error;
         if (data.session) {
@@ -44,7 +57,7 @@ export default function AuthForm({ initialMode = 'login' }) {
           setPassword('');
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password, options: captcha });
         if (error) throw error;
         router.push('/analyze');
       }
@@ -53,6 +66,7 @@ export default function AuthForm({ initialMode = 'login' }) {
       setError(err.message || String(err));
     } finally {
       setBusy(false);
+      setCaptchaRound((n) => n + 1); // captcha tokens are single-use
     }
   }
 
@@ -101,12 +115,14 @@ export default function AuthForm({ initialMode = 'login' }) {
             type="password"
             autoComplete={isSignup ? 'new-password' : 'current-password'}
             required
-            minLength={6}
+            minLength={isSignup ? MIN_PASSWORD : undefined}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        {isSignup && <p className="hint field-hint">At least 6 characters.</p>}
+        {isSignup && <p className="hint field-hint">At least {MIN_PASSWORD} characters.</p>}
+
+        <Captcha onToken={onCaptchaToken} resetKey={`${mode}-${captchaRound}`} />
 
         <button className="button button-teal button-block" type="submit" disabled={busy}>
           {busy ? <span className="spinner spinner-light" /> : isSignup ? 'Sign up' : 'Log in'}

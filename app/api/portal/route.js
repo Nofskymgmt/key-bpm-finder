@@ -1,4 +1,4 @@
-import { stripe, supabaseAdmin, userFromRequest, json } from '../../lib/server';
+import { stripe, supabaseAdmin, userFromRequest, json, serverError } from '../../lib/server';
 
 // Opens the Stripe customer portal (cancel, update card, see invoices) and returns its URL.
 export async function POST(request) {
@@ -19,7 +19,6 @@ export async function POST(request) {
     });
     return json({ url: session.url });
   } catch (err) {
-    console.error('Portal error:', err);
-    return json({ error: err.message }, 500);
+    return serverError('Portal error:', err);
   }
 }
