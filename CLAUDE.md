@@ -13,7 +13,7 @@ The home page is a landing page with a hero, a "How it works" section and pricin
 - An account is required to analyze.
 - **Free:** 5 analyses per calendar month (UTC), counted from the user's saved History rows, so the count resets on the 1st. The database enforces the limit (`supabase/billing.sql`). After 5, the Analyze page shows a paywall.
 - **Pro:** $9/month Stripe subscription, unlimited analyses. Uses Stripe Checkout. A Stripe **webhook** is the only thing that marks a user Pro, never the checkout redirect. "Manage subscription" in the Account menu opens the Stripe customer portal.
-- **Stripe is LIVE on Vercel production** (real payments, set up 2026-09-29). Local development (`.env.local`'s `STRIPE_SECRET_KEY` and related values) stays in **test mode**. The live values are kept in `.env.local` as `STRIPE_LIVE_*` and are set in Vercel under the normal names.
+- **Stripe is LIVE on Vercel production** (real payments, set up 2026-09-29). Payments are tested on the live site; local development has no Stripe keys.
   - Never point local development at live keys.
   - Stripe setup lives in `scripts/stripe-setup.mjs`. Use `--live` for the live account.
 
@@ -27,7 +27,8 @@ That is the whole product. **Do not add features beyond it.** That means no play
 - **Secret keys** (`SUPABASE_SECRET_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) are used **only in server code**: `app/api/*` and `app/lib/server.js`.
   - Never give them the `NEXT_PUBLIC_` prefix.
   - Never import them into a `'use client'` file.
-  - They go in `.env.local` (never committed) and in Vercel's environment variables.
+  - They live **only in Vercel's environment variables**, not in `.env.local`: this folder is synced to OneDrive. Never print them in chat or logs.
+- Database rules: `supabase/schema.sql`, then `billing.sql`, then `security-fixes.sql`. The trigger `enforce_analysis_rules` enforces the free limit and sets `created_at`. Browser roles may only read and insert their own `analyses` and read their own `profiles`. Keep it that way.
 - **Stripe** for payments. The server routes are `app/api/checkout`, `app/api/portal` and `app/api/stripe/webhook`. Don't add other backend code unless the user asks.
 - Deployed to **Vercel** (project `key-bpm-finder`, https://key-bpm-finder.vercel.app), so don't do anything that would block a Vercel deploy. Deploy with `npx vercel deploy --prod`.
 - **The source code is public** at https://github.com/Nofskymgmt/key-bpm-finder under **AGPL-3.0**, because the app includes Essentia.js (AGPL-3.0).
